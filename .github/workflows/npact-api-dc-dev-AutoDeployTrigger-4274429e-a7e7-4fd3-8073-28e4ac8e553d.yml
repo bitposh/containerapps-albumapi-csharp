@@ -1,0 +1,42 @@
+name: Trigger auto deployment for npact-api-dc-dev
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ main ]
+    paths:
+    - 'src/**'
+    - '.github/workflows/npact-api-dc-dev-AutoDeployTrigger-4274429e-a7e7-4fd3-8073-28e4ac8e553d.yml'
+
+  # Allow manual trigger 
+  workflow_dispatch:
+      
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.NPACTAPIDCDEV_AZURE_CREDENTIALS }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          appSourcePath: ${{ github.workspace }}/src 
+          registryUrl: ca5dbb3ff141acr.azurecr.io
+          registryUsername: ${{ secrets.NPACTAPIDCDEV_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.NPACTAPIDCDEV_REGISTRY_PASSWORD }}
+          containerAppName: npact-api-dc-dev
+          resourceGroup: rg-dev-dc-central-001
+          imageToBuild: ca5dbb3ff141acr.azurecr.io/npact-api-dc-dev:${{ github.sha }}
+          dockerfilePath: Dockerfile
+
+     
+
